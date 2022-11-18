@@ -74,9 +74,9 @@ export async function deleteTransaction(req,res){
   if (!existingTransaction) {
     return res.sendStatus(404);
   }
-  console.log(existingTransaction.userId)
+
   console.log(session.userId)
-  if(existingTransaction.userId !== session.userId){
+  if(existingTransaction.userId.toString() !== session.userId.toString() ){
     return res.sendStatus(401);
   }
   try {
