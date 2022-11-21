@@ -1,6 +1,7 @@
 import { transactionsCollection, sessionsCollection } from "../database/db.js";
 import dayjs from "dayjs";
 import { ObjectId } from "mongodb";
+import { transactionsSchema } from "../middlewares/transactionSchema.js";
 export async function getTransactions(req, res) {
   //"a4f79fd4-7786-40ed-a778-0ca544efc613"
   const { authorization } = req.headers;
@@ -30,25 +31,17 @@ export async function postTransaction(req, res) {
   //{"value":22,"description":"teste","type":"deposit"}
   const { transactionValue, description, type } = req.body;
   // validar
-  const { authorization } = req.headers;
+  const session = req.session;
   const today = dayjs().format("DD/MM/YY");
-  
-  const token = authorization?.replace("Bearer ", "");
-  if (!token) {
-    return res.sendStatus(401);
-  }
+
   try {
-    const session = await sessionsCollection.findOne({ token });
-    if (!session) {
-      return res.sendStatus(401);
-    }
-   
     await transactionsCollection.insertOne({
       userId: session?.userId,
       description,
       transactionValue,
       date: today,
       type,
+      time:Date.now()
     });
 
     res.sendStatus(200);
@@ -63,7 +56,7 @@ export async function deleteTransaction(req, res) {
 
   try {
     await transactionsCollection.deleteOne({
-      _id:  new ObjectId(id),
+      _id: new ObjectId(id),
     });
 
     res.sendStatus(200);
@@ -76,7 +69,14 @@ export async function deleteTransaction(req, res) {
 export async function updateTransaction(req, res) {
   const { description, transactionValue } = req.body;
   const { id } = req.params;
-  console.log(id)
+  const { error } = transactionsSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    const errors = error.details.map((detail) => detail.message);
+    return res.status(422).send(errors);
+  }
   try {
     await transactionsCollection.updateOne(
       {
