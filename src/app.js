@@ -16,5 +16,6 @@ email:joi.string().required(),
 password:joi.string().required()
 });
 
-const port = 5000;
+
+const port = process.env.PORT || 5000;
 app.listen(port,()=> console.log `server running in port: ${port}`)
