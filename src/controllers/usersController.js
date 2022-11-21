@@ -19,14 +19,14 @@ export async function signIn(req, res) {
     const token = uuidV4();
     const user = await usersCollection.findOne({ email });
     if (!user){
-        res.status(400).send("Email não cadastrado");
+        return res.status(400).send("Email não cadastrado");
     }
     if (user && bcrypt.compareSync(password, user.password)) {
         await sessionsCollection.insertOne({
           token,
           userId: user._id,
         });
-        res.send({ token,userName:user.name });
+        return res.send({ token,userName:user.name });
       } else {
         res.sendStatus(401);
       };

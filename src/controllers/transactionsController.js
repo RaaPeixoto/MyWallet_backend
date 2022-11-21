@@ -28,11 +28,11 @@ export async function getTransactions(req, res) {
 export async function postTransaction(req, res) {
   //"a4f79fd4-7786-40ed-a778-0ca544efc613"
   //{"value":22,"description":"teste","type":"deposit"}
-  const { value, description, type } = req.body;
+  const { transactionValue, description, type } = req.body;
   // validar
   const { authorization } = req.headers;
   const today = dayjs().format("DD/MM/YY");
-  console.log(today);
+  
   const token = authorization?.replace("Bearer ", "");
   if (!token) {
     return res.sendStatus(401);
@@ -42,11 +42,11 @@ export async function postTransaction(req, res) {
     if (!session) {
       return res.sendStatus(401);
     }
-    console.log(session);
+   
     await transactionsCollection.insertOne({
       userId: session?.userId,
       description,
-      value,
+      transactionValue,
       date: today,
       type,
     });
@@ -59,30 +59,11 @@ export async function postTransaction(req, res) {
 }
 
 export async function deleteTransaction(req, res) {
-  const { authorization } = req.headers;
   const { id } = req.params;
-  const token = authorization?.replace("Bearer ", "");
-  if (!token) {
-    return res.sendStatus(401);
-  }
-  const session = await sessionsCollection.findOne({ token });
-  if (!session) {
-    return res.sendStatus(401);
-  }
-  const existingTransaction = await transactionsCollection.findOne({
-    _id: new ObjectId(id),
-  });
-  if (!existingTransaction) {
-    return res.sendStatus(404);
-  }
 
-  console.log(session.userId);
-  if (existingTransaction.userId.toString() !== session.userId.toString()) {
-    return res.sendStatus(401);
-  }
   try {
     await transactionsCollection.deleteOne({
-      _id: existingTransaction._id,
+      _id:  new ObjectId(id),
     });
 
     res.sendStatus(200);
@@ -93,39 +74,16 @@ export async function deleteTransaction(req, res) {
 }
 
 export async function updateTransaction(req, res) {
-  const { description, value } = req.body;
-  const { authorization } = req.headers;
-  const token = authorization?.replace("Bearer ", "");
+  const { description, transactionValue } = req.body;
   const { id } = req.params;
-  if (!token) {
-    return res.sendStatus(401);
-  }
-  const session = await sessionsCollection.findOne({ token });
-  if (!session) {
-    return res.sendStatus(401);
-  }
-
-  if (!session) {
-    return res.sendStatus(401);
-  }
-  const existingTransaction = await transactionsCollection.findOne({
-    _id: new ObjectId(id),
-  });
-  if (!existingTransaction) {
-   
-    return res.sendStatus(404);
-  }
-  if (existingTransaction.userId.toString() !== session.userId.toString()) {
-    return res.sendStatus(401);
-  }
-
+  console.log(id)
   try {
     await transactionsCollection.updateOne(
       {
         _id: new ObjectId(id),
       },
       {
-        $set: { value, description },
+        $set: { transactionValue, description },
       }
     );
 
