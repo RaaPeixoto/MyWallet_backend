@@ -18,14 +18,14 @@ export async function newUserValidation(req, res, next) {
     password,
   };
 
-  const {error}=newUserSchema.validate(user,{abortEarly:false});
+  const { error } = newUserSchema.validate(user, { abortEarly: false });
 
-  if(error){
-    const errors = error.details.map((detail)=>detail.message);
+  if (error) {
+    const errors = error.details.map((detail) => detail.message);
     return res.status(422).send(errors);
   }
 
-  req.user= user;
+  req.user = user;
 
   next();
 }
